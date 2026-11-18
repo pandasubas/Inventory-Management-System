@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign up — Stockly</title>
+  <meta name="description" content="Create your Stockly inventory management account." />
+  <link rel="stylesheet" href="inventory.css" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+<body class="auth-body">
+  <main class="auth-card" role="main">
+    <div class="auth-logo">
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
+      </div>
+      <span class="name">Stockly</span>
+    </div>
+    <h1>Create your account</h1>
+    <p class="sub">Start managing your inventory in seconds</p>
+
+    <div class="auth-error" id="authError"></div>
+
+    <form class="auth-form" id="signupForm" novalidate>
+      <div class="auth-field">
+        <label for="name">Full name</label>
+        <input type="text" id="name" name="name" autocomplete="name" placeholder="Jane Doe" required />
+        <div class="field-error" id="nameErr"></div>
+      </div>
+
+      <div class="auth-field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com" required />
+        <div class="field-error" id="emailErr"></div>
+      </div>
+
+      <div class="auth-field has-toggle">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" autocomplete="new-password" placeholder="At least 6 characters" required />
+        <button type="button" class="pw-toggle" id="pwToggle" aria-label="Show password">👁</button>
+        <div class="field-error" id="passwordErr"></div>
+      </div>
+
+      <div class="auth-field has-toggle">
+        <label for="confirm">Confirm password</label>
+        <input type="password" id="confirm" name="confirm" autocomplete="new-password" placeholder="Repeat your password" required />
+        <button type="button" class="pw-toggle" id="confirmToggle" aria-label="Show password">👁</button>
+        <div class="field-error" id="confirmErr"></div>
+      </div>
+
+      <button type="submit" class="auth-btn">Create account</button>
+    </form>
+
+    <p class="auth-foot">
+      Already have an account? <a href="login.html" class="auth-link">Sign in</a>
+    </p>
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+    (function () {
+      const form = document.getElementById('signupForm');
+      const nameEl = document.getElementById('name');
+      const emailEl = document.getElementById('email');
+      const pwEl = document.getElementById('password');
+      const cpEl = document.getElementById('confirm');
+      const err = document.getElementById('authError');
+
+      document.getElementById('pwToggle').addEventListener('click', () => Auth.togglePw(pwEl, document.getElementById('pwToggle')));
+      document.getElementById('confirmToggle').addEventListener('click', () => Auth.togglePw(cpEl, document.getElementById('confirmToggle')));
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        err.classList.remove('show');
+        const errors = { name: '', email: '', password: '', confirm: '' };
+        const name = nameEl.value.trim();
+        const email = emailEl.value.trim();
+        const password = pwEl.value;
+        const confirm = cpEl.value;
+
+        if (name.length < 2) errors.name = 'Enter your full name.';
+        if (!Auth.isEmail(email)) errors.email = 'Enter a valid email address.';
+        if (password.length < 6) errors.password = 'Password must be at least 6 characters.';
+        if (confirm !== password) errors.confirm = 'Passwords do not match.';
+
+        document.getElementById('nameErr').textContent = errors.name;
+        document.getElementById('emailErr').textContent = errors.email;
+        document.getElementById('passwordErr').textContent = errors.password;
+        document.getElementById('confirmErr').textContent = errors.confirm;
+        if (Object.values(errors).some(Boolean)) return;
+
+        const users = Auth.getUsers();
+        if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+          err.textContent = 'An account with that email already exists.';
+          err.classList.add('show');
+          return;
+        }
+
+        users.push({ name, email, password, createdAt: Date.now() });
+        Auth.saveUsers(users);
+        Auth.setSession({ email, name });
+        window.location.href = 'inventory.html';
+      });
+    })();
+  </script>
+</body>
+</html>

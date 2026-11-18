@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Stockly</title>
+  <meta name="description" content="Sign in to your Stockly inventory management account." />
+  <link rel="stylesheet" href="inventory.css" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+<body class="auth-body">
+  <main class="auth-card" role="main">
+    <div class="auth-logo">
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
+      </div>
+      <span class="name">Stockly</span>
+    </div>
+    <h1>Welcome back</h1>
+    <p class="sub">Sign in to continue to your dashboard</p>
+
+    <div class="auth-error" id="authError"></div>
+
+    <form class="auth-form" id="loginForm" novalidate>
+      <div class="auth-field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com" required />
+        <div class="field-error" id="emailErr"></div>
+      </div>
+
+      <div class="auth-field has-toggle">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" placeholder="••••••••" required />
+        <button type="button" class="pw-toggle" id="pwToggle" aria-label="Show password">👁</button>
+        <div class="field-error" id="passwordErr"></div>
+      </div>
+
+      <div class="auth-row">
+        <label class="auth-check">
+          <input type="checkbox" id="remember" /> Remember me
+        </label>
+        <a href="#" class="auth-link" id="forgotLink">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="auth-btn">Sign in</button>
+    </form>
+
+    <p class="auth-foot">
+      Don't have an account? <a href="signup.html" class="auth-link">Create one</a>
+    </p>
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+    (function () {
+      const form = document.getElementById('loginForm');
+      const emailEl = document.getElementById('email');
+      const pwEl = document.getElementById('password');
+      const rememberEl = document.getElementById('remember');
+      const err = document.getElementById('authError');
+      const emailErr = document.getElementById('emailErr');
+      const pwErr = document.getElementById('passwordErr');
+
+      // Prefill remembered email
+      const saved = localStorage.getItem('stockly:rememberEmail');
+      if (saved) { emailEl.value = saved; rememberEl.checked = true; }
+
+      // Password toggle
+      document.getElementById('pwToggle').addEventListener('click', () => Auth.togglePw(pwEl, document.getElementById('pwToggle')));
+
+      document.getElementById('forgotLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        const email = (emailEl.value || '').trim();
+        if (!Auth.isEmail(email)) { alert('Enter your email above first, then click Forgot password.'); return; }
+        alert('If an account exists for ' + email + ', a reset link has been sent.');
+      });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        err.classList.remove('show'); emailErr.textContent = ''; pwErr.textContent = '';
+        const email = emailEl.value.trim();
+        const password = pwEl.value;
+        let ok = true;
+        if (!Auth.isEmail(email)) { emailErr.textContent = 'Enter a valid email address.'; ok = false; }
+        if (!password) { pwErr.textContent = 'Password is required.'; ok = false; }
+        if (!ok) return;
+
+        const users = Auth.getUsers();
+        const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+        if (!user || user.password !== password) {
+          err.textContent = 'Invalid email or password.';
+          err.classList.add('show');
+          return;
+        }
+
+        if (rememberEl.checked) localStorage.setItem('stockly:rememberEmail', email);
+        else localStorage.removeItem('stockly:rememberEmail');
+
+        Auth.setSession({ email: user.email, name: user.name });
+        window.location.href = 'inventory.html';
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stockly — Inventory Management</title>
+  <meta name="description" content="Modern responsive inventory management system with products, categories, suppliers and reports." />
+  <link rel="stylesheet" href="inventory.css" />
+</head>
+<body>
+  <div class="app" id="app">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
+          <span>Stockly</span>
+        </div>
+        <button class="icon-btn sidebar-close" id="sidebarClose" aria-label="Close menu">✕</button>
+      </div>
+      <nav class="nav">
+        <a href="#" class="nav-item active" data-view="dashboard"><span class="ico">▦</span> Dashboard</a>
+        <a href="#" class="nav-item" data-view="products"><span class="ico">📦</span> Products</a>
+        <a href="#" class="nav-item" data-view="categories"><span class="ico">🏷</span> Categories</a>
+        <a href="#" class="nav-item" data-view="suppliers"><span class="ico">🚚</span> Suppliers</a>
+        <a href="#" class="nav-item" data-view="stock"><span class="ico">📊</span> Stock</a>
+        <a href="#" class="nav-item" data-view="reports"><span class="ico">📈</span> Reports</a>
+        <a href="#" class="nav-item" data-view="settings"><span class="ico">⚙</span> Settings</a>
+      </nav>
+      <div class="sidebar-footer">
+        <p>v1.0 · Local only</p>
+      </div>
+    </aside>
+
+    <div class="backdrop" id="backdrop"></div>
+
+    <!-- Main -->
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open menu">☰</button>
+        <div class="brand-mobile">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/></svg>
+          <span id="brandMobile">Stockly</span>
+        </div>
+        <div class="search">
+          <span class="search-ico">🔍</span>
+          <input type="text" id="globalSearch" placeholder="Search products, SKUs, categories..." />
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+          <button class="icon-btn notif-btn" id="notifBtn" aria-label="Notifications">
+            🔔<span class="notif-dot" id="notifDot" hidden></span>
+          </button>
+          <div class="profile" id="profile">
+            <div class="avatar">AD</div>
+            <div class="profile-menu" id="profileMenu" hidden>
+              <button data-view="settings">Settings</button>
+              <button id="clearAllBtn">Clear all data</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="content" id="content">
+        <!-- Dashboard -->
+        <section class="view" data-view="dashboard">
+          <div class="page-head">
+            <div>
+              <h1>Dashboard</h1>
+              <p class="muted">Overview of your inventory at a glance.</p>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat-card grad-1">
+              <div class="stat-ico">📦</div>
+              <div><div class="stat-label">Total Products</div><div class="stat-value" id="statProducts">0</div></div>
+            </div>
+            <div class="stat-card grad-2">
+              <div class="stat-ico">🏷</div>
+              <div><div class="stat-label">Categories</div><div class="stat-value" id="statCategories">0</div></div>
+            </div>
+            <div class="stat-card grad-3">
+              <div class="stat-ico">⚠</div>
+              <div><div class="stat-label">Low Stock</div><div class="stat-value" id="statLow">0</div></div>
+            </div>
+            <div class="stat-card grad-4">
+              <div class="stat-ico">⛔</div>
+              <div><div class="stat-label">Out of Stock</div><div class="stat-value" id="statOut">0</div></div>
+            </div>
+            <div class="stat-card grad-5 wide">
+              <div class="stat-ico">💰</div>
+              <div><div class="stat-label">Inventory Value</div><div class="stat-value" id="statValue">0</div></div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-head"><h3>Recent Activity</h3></div>
+              <ul class="activity" id="activityList"></ul>
+            </div>
+            <div class="card">
+              <div class="card-head"><h3>Low Stock Alerts</h3></div>
+              <ul class="activity" id="lowStockList"></ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Products -->
+        <section class="view" data-view="products" hidden>
+          <div class="page-head">
+            <div>
+              <h1>Products</h1>
+              <p class="muted">Manage your product catalog.</p>
+            </div>
+            <button class="btn btn-primary" id="addProductBtn">＋ Add Product</button>
+          </div>
+          <div class="toolbar">
+            <input type="text" id="prodSearch" placeholder="Search by name or SKU..." />
+            <select id="prodCategoryFilter"><option value="">All categories</option></select>
+            <select id="prodStatusFilter">
+              <option value="">All status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            <select id="prodSort">
+              <option value="name-asc">Name A→Z</option>
+              <option value="name-desc">Name Z→A</option>
+              <option value="stock-asc">Stock ↑</option>
+              <option value="stock-desc">Stock ↓</option>
+              <option value="price-asc">Price ↑</option>
+              <option value="price-desc">Price ↓</option>
+            </select>
+          </div>
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table class="table" id="productsTable">
+                <thead>
+                  <tr>
+                    <th>Product</th><th>SKU</th><th>Category</th><th>Supplier</th>
+                    <th>Qty</th><th>Price</th><th>Status</th><th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="prodPagination"></div>
+          </div>
+        </section>
+
+        <!-- Categories -->
+        <section class="view" data-view="categories" hidden>
+          <div class="page-head">
+            <div><h1>Categories</h1><p class="muted">Organize products into categories.</p></div>
+            <button class="btn btn-primary" id="addCategoryBtn">＋ Add Category</button>
+          </div>
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table class="table" id="categoriesTable">
+                <thead><tr><th>Name</th><th>Description</th><th>Products</th><th>Actions</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Suppliers -->
+        <section class="view" data-view="suppliers" hidden>
+          <div class="page-head">
+            <div><h1>Suppliers</h1><p class="muted">Track your vendors and contacts.</p></div>
+            <button class="btn btn-primary" id="addSupplierBtn">＋ Add Supplier</button>
+          </div>
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table class="table" id="suppliersTable">
+                <thead><tr><th>Name</th><th>Contact</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Stock -->
+        <section class="view" data-view="stock" hidden>
+          <div class="page-head"><div><h1>Stock Levels</h1><p class="muted">Live overview of every product's stock.</p></div></div>
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table class="table" id="stockTable">
+                <thead><tr><th>Product</th><th>SKU</th><th>Qty</th><th>Reorder</th><th>Status</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Reports -->
+        <section class="view" data-view="reports" hidden>
+          <div class="page-head"><div><h1>Reports</h1><p class="muted">Key metrics and health of your inventory.</p></div></div>
+          <div class="stats">
+            <div class="stat-card grad-1"><div class="stat-ico">📦</div><div><div class="stat-label">Total Products</div><div class="stat-value" id="repTotal">0</div></div></div>
+            <div class="stat-card grad-5"><div class="stat-ico">💰</div><div><div class="stat-label">Inventory Value</div><div class="stat-value" id="repValue">0</div></div></div>
+            <div class="stat-card grad-3"><div class="stat-ico">⚠</div><div><div class="stat-label">Low Stock</div><div class="stat-value" id="repLow">0</div></div></div>
+            <div class="stat-card grad-4"><div class="stat-ico">⛔</div><div><div class="stat-label">Out of Stock</div><div class="stat-value" id="repOut">0</div></div></div>
+          </div>
+          <div class="grid-2">
+            <div class="card"><div class="card-head"><h3>Low Stock Products</h3></div><ul class="activity" id="repLowList"></ul></div>
+            <div class="card"><div class="card-head"><h3>Out of Stock Products</h3></div><ul class="activity" id="repOutList"></ul></div>
+          </div>
+        </section>
+
+        <!-- Settings -->
+        <section class="view" data-view="settings" hidden>
+          <div class="page-head"><div><h1>Settings</h1><p class="muted">Customize your workspace.</p></div></div>
+          <div class="card form-card">
+            <div class="form-row">
+              <label>Company Name</label>
+              <input type="text" id="setCompany" placeholder="Acme Inc." />
+            </div>
+            <div class="form-row">
+              <label>Currency</label>
+              <select id="setCurrency">
+                <option value="$">USD ($)</option>
+                <option value="€">EUR (€)</option>
+                <option value="£">GBP (£)</option>
+                <option value="₹">INR (₹)</option>
+                <option value="¥">JPY (¥)</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Theme</label>
+              <select id="setTheme">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+              <button class="btn btn-danger" id="clearDataBtn">Clear All Data</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Product Modal -->
+  <div class="modal" id="productModal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="productModalTitle">Add Product</h3>
+        <button class="icon-btn" data-close>✕</button>
+      </div>
+      <form id="productForm" class="modal-body form-grid">
+        <input type="hidden" id="prodId" />
+        <div class="form-row"><label>Name *</label><input required id="prodName" /></div>
+        <div class="form-row"><label>SKU *</label><input required id="prodSku" /></div>
+        <div class="form-row"><label>Category</label><select id="prodCategory"></select></div>
+        <div class="form-row"><label>Supplier</label><select id="prodSupplier"></select></div>
+        <div class="form-row"><label>Purchase Price</label><input type="number" min="0" step="0.01" id="prodPurchase" /></div>
+        <div class="form-row"><label>Selling Price *</label><input required type="number" min="0" step="0.01" id="prodPrice" /></div>
+        <div class="form-row"><label>Stock Quantity *</label><input required type="number" min="0" id="prodQty" /></div>
+        <div class="form-row"><label>Reorder Level</label><input type="number" min="0" id="prodReorder" value="5" /></div>
+        <div class="form-row"><label>Unit</label><input id="prodUnit" placeholder="pcs, kg, box..." /></div>
+        <div class="form-row"><label>Status</label>
+          <select id="prodStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+        </div>
+        <div class="modal-actions full">
+          <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div class="modal" id="categoryModal" hidden>
+    <div class="modal-card sm">
+      <div class="modal-head"><h3 id="categoryModalTitle">Add Category</h3><button class="icon-btn" data-close>✕</button></div>
+      <form id="categoryForm" class="modal-body">
+        <input type="hidden" id="catId" />
+        <div class="form-row"><label>Name *</label><input required id="catName" /></div>
+        <div class="form-row"><label>Description</label><textarea id="catDesc" rows="3"></textarea></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Supplier Modal -->
+  <div class="modal" id="supplierModal" hidden>
+    <div class="modal-card sm">
+      <div class="modal-head"><h3 id="supplierModalTitle">Add Supplier</h3><button class="icon-btn" data-close>✕</button></div>
+      <form id="supplierForm" class="modal-body">
+        <input type="hidden" id="supId" />
+        <div class="form-row"><label>Name *</label><input required id="supName" /></div>
+        <div class="form-row"><label>Contact Person</label><input id="supContact" /></div>
+        <div class="form-row"><label>Email</label><input type="email" id="supEmail" /></div>
+        <div class="form-row"><label>Phone</label><input id="supPhone" /></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div class="modal" id="confirmModal" hidden>
+    <div class="modal-card sm">
+      <div class="modal-head"><h3 id="confirmTitle">Confirm</h3><button class="icon-btn" data-close>✕</button></div>
+      <div class="modal-body">
+        <p id="confirmMsg">Are you sure?</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmOk">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+
+  <script src="inventory.js"></script>
+</body>
+</html>
